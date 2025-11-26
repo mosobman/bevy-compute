@@ -3,15 +3,17 @@ use std::{
 	sync::mpsc::channel,
 };
 
+use std::collections::HashMap;
+use bevy::asset::RenderAssetUsages;
 use bevy::{
 	prelude::*,
 	render::{
 		extract_resource::ExtractResource,
-		render_asset::{RenderAssetUsages, RenderAssets},
+		render_asset::{RenderAssets}, // RenderAssetUsages
 		render_resource::{
 			encase::private::{WriteInto, Writer},
 			BindGroup, BindGroupEntry, BindGroupLayout, BindGroupLayoutEntry, BindingResource, BindingType, Buffer,
-			BufferBindingType, BufferDescriptor, BufferInitDescriptor, BufferUsages, Extent3d, Maintain, MapMode,
+			BufferBindingType, BufferDescriptor, BufferInitDescriptor, BufferUsages, Extent3d, MapMode, // Maintain
 			ShaderStages, ShaderType, StorageBuffer, StorageTextureAccess, TextureDimension, TextureFormat, TextureUsages,
 			TextureViewDimension,
 		},
@@ -19,8 +21,9 @@ use bevy::{
 		texture::GpuImage,
 		Extract, RenderApp,
 	},
-	utils::HashMap,
+	// utils::HashMap,
 };
+use wgpu::PollType;
 
 #[derive(Clone)]
 enum ShaderBufferStorage {
@@ -620,7 +623,7 @@ impl ShaderBufferRenderSet {
 			buffer_slice.map_async(MapMode::Read, move |result| {
 				sender.send(result).unwrap();
 			});
-			device.poll(Maintain::Wait);
+			device.poll(PollType::Wait).unwrap();
 			receiver.recv().unwrap().unwrap();
 			let result = buffer_slice.get_mapped_range().to_vec();
 			buffer.unmap();

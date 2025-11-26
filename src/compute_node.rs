@@ -150,7 +150,7 @@ impl Node for ComputeNode {
 						push_constant_ranges: Vec::new(),
 						shader: shader,
 						shader_defs: vec![],
-						entry_point: Cow::Owned(entry_point.clone()),
+						entry_point: Some(Cow::Owned(entry_point.clone())),
 						zero_initialize_workgroup_memory: true,
 					}))
 				} else {

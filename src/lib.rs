@@ -88,7 +88,7 @@ use std::{sync::mpsc::sync_channel, time::Duration};
 
 use bevy::{
 	prelude::*,
-	render::{Render, RenderApp, RenderSet},
+	render::{Render, RenderApp, RenderSystems},
 };
 use compute_data_transmission::ComputeDataTransmission;
 use compute_main_setup::compute_main_setup;
@@ -120,20 +120,20 @@ impl Plugin for BevyComputePlugin {
 			.add_systems(Update, compute_main_setup)
 			.add_systems(First, parse_render_messages.run_if(resource_exists::<ComputeSequence>))
 			.add_systems(Update, swap_sprite_buffers.run_if(resource_exists::<ComputeSequence>))
-			.add_event::<StartComputeEvent>()
-			.add_event::<CopyBufferEvent>()
-			.add_event::<ComputeTaskDoneEvent>();
+			.add_message::<StartComputeEvent>()
+			.add_message::<CopyBufferEvent>()
+			.add_message::<ComputeTaskDoneEvent>();
 
 		let render_app = app.sub_app_mut(RenderApp);
 		render_app
 			.add_systems(ExtractSchedule, extract_resources)
-			.add_systems(Render, queue_bind_group.in_set(RenderSet::Queue).run_if(resource_exists::<ComputeSequence>))
+			.add_systems(Render, queue_bind_group.in_set(RenderSystems::Queue).run_if(resource_exists::<ComputeSequence>))
 			.add_systems(Render, compute_render_setup.run_if(resource_added::<ComputeSequence>));
 	}
 }
 
 /// This event is how you start the compute shaders. Specify the details of how they're going to run with the [tasks](StartComputeEvent::tasks), and optionally provide a buffer to store the current iteration count with [iteration_buffer](StartComputeEvent::iteration_buffer).
-#[derive(Event)]
+#[derive(Event, Message)]
 pub struct StartComputeEvent {
 	/// Ths list of compute tasks to complete. It will run each task in sequence, and throw a [ComputeTaskDoneEvent] when they're done.
 	pub tasks: Vec<ComputeTask>,
@@ -143,7 +143,7 @@ pub struct StartComputeEvent {
 }
 
 /// This event is thrown every time a [CopyBuffer][ComputeAction::CopyBuffer] compute action is executed. It contains the handle of the buffer that was copied, and a `Vec<u8>` with all the data. This is how you get data back out of the compute shader to the CPU.
-#[derive(Event)]
+#[derive(Event, Message)]
 pub struct CopyBufferEvent {
 	/// This is the handle of the buffer that was copied.
 	pub buffer: ShaderBufferHandle,
@@ -153,7 +153,7 @@ pub struct CopyBufferEvent {
 }
 
 /// This event is thrown every time a compute task is completed.
-#[derive(Event)]
+#[derive(Event, Message)]
 pub struct ComputeTaskDoneEvent {
 	/// The number of the completed task, as in, the index into the `Vec<ComputeTask>` that was provided in the [StartComputeEvent].
 	pub group_finished: usize,

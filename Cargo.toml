@@ -8,7 +8,16 @@ name = "bevy_compute"
 crate-type = ["lib"]
 
 [dependencies]
-bevy = "0.15"
+bevy = { version = "0.17", features = ["dynamic_linking"] }
+wgpu = "^26"
 
 [[example]]
 name = "life"
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3

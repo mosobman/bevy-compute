@@ -25,9 +25,9 @@ fn main() {
 			DefaultPlugins
 				.set(WindowPlugin {
 					primary_window: Some(Window {
-						resolution: ((SIZE.0 * DISPLAY_FACTOR) as f32, (SIZE.1 * DISPLAY_FACTOR) as f32).into(),
+						resolution: ((SIZE.0 * DISPLAY_FACTOR) as u32, (SIZE.1 * DISPLAY_FACTOR) as u32).into(),
 						// uncomment for unthrottled FPS
-						// present_mode: bevy::window::PresentMode::AutoNoVsync,
+						present_mode: bevy::window::PresentMode::AutoNoVsync,
 						..default()
 					}),
 					..default()
@@ -41,7 +41,7 @@ fn main() {
 
 fn setup(
 	mut commands: Commands, mut buffer_set: ResMut<ShaderBufferSet>, mut images: ResMut<Assets<Image>>,
-	mut start_compute_events: EventWriter<StartComputeEvent>,
+	mut start_compute_events: MessageWriter<StartComputeEvent>,
 ) {
 	let image = buffer_set.add_texture_fill(
 		&mut images,
@@ -64,7 +64,7 @@ fn setup(
 	));
 	commands.spawn(Camera2d);
 
-	start_compute_events.send(StartComputeEvent {
+	start_compute_events.write(StartComputeEvent {
 		tasks: vec![
 			ComputeTask {
 				label: Some("Init".to_owned()),
