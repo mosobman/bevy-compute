@@ -32,6 +32,15 @@ fn main() {
 					}),
 					..default()
 				})
+				.set(bevy::render::RenderPlugin {
+					render_creation: bevy::render::settings::RenderCreation::Automatic(
+						bevy::render::settings::WgpuSettings {
+							backends: Some(bevy::render::settings::Backends::DX12),
+							..default()
+						},
+					),
+					..default()
+				})
 				.set(ImagePlugin::default_nearest()),
 			BevyComputePlugin,
 		))
@@ -43,12 +52,13 @@ fn setup(
 	mut commands: Commands, mut buffer_set: ResMut<ShaderBufferSet>, mut images: ResMut<Assets<Image>>,
 	mut start_compute_events: MessageWriter<StartComputeEvent>,
 ) {
+	let px = [0.0f32; 4];
 	let image = buffer_set.add_texture_fill(
 		&mut images,
 		SIZE.0,
 		SIZE.1,
-		TextureFormat::R32Float,
-		&0.0f32.to_ne_bytes(),
+		TextureFormat::Rgba32Float,
+		bytemuck::cast_slice(&px),
 		StorageTextureAccess::ReadOnly,
 		Binding::Double(0, (0, 1)),
 	);
@@ -64,6 +74,7 @@ fn setup(
 	));
 	commands.spawn(Camera2d);
 
+	let freq = 240;
 	start_compute_events.write(StartComputeEvent {
 		tasks: vec![
 			ComputeTask {
@@ -88,7 +99,7 @@ fn setup(
 				iterations: None,
 				steps: vec![
 					ComputeStep {
-						max_frequency: NonZeroU32::new(10),
+						max_frequency: NonZeroU32::new(freq),
 						action: ComputeAction::RunShader {
 							shader: SHADER_ASSET_PATH.to_owned(),
 							entry_point: "update".to_owned(),
@@ -97,7 +108,10 @@ fn setup(
 							z_workgroup_count: 1,
 						},
 					},
-					ComputeStep { max_frequency: NonZeroU32::new(10), action: ComputeAction::SwapBuffers { buffer: image } },
+					ComputeStep {
+						max_frequency: NonZeroU32::new(freq),
+						action: ComputeAction::SwapBuffers { buffer: image }
+					},
 				],
 			},
 		],

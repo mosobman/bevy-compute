@@ -9,6 +9,7 @@ crate-type = ["lib"]
 
 [dependencies]
 bevy = { version = "0.17", features = ["dynamic_linking"] }
+bytemuck = "^1.24"
 wgpu = "^26"
 
 [[example]]
